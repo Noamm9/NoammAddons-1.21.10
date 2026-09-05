@@ -5,6 +5,7 @@ import com.github.noamm9.NoammAddons.mc
 import com.github.noamm9.ui.hud.HudElement
 import com.github.noamm9.utils.ColorUtils.colorCodeByPercent
 import com.github.noamm9.utils.ColorUtils.colorizeScore
+import com.github.noamm9.utils.ColorUtils.lerp
 import com.github.noamm9.utils.MathUtils
 import com.github.noamm9.utils.dungeons.DungeonListener
 import com.github.noamm9.utils.dungeons.DungeonPlayer
@@ -110,7 +111,7 @@ object MapRenderer: HudElement() {
 
             //#if CHEAT
             if (tile is RoomTile && tile.uniqueRoom?.hasMimic == true && MapConfig.highlightMimicRoom.value) {
-                color = MathUtils.lerpColor(color, MapConfig.colorMimic.value, 0.2)
+                color = color.lerp(MapConfig.colorMimic.value, 0.2)
             }
             //#endif
 

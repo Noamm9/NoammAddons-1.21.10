@@ -2,7 +2,6 @@ package com.github.noamm9.ui.clickgui.components.settings
 
 import com.github.noamm9.features.impl.dev.ClickGui
 import com.github.noamm9.utils.ColorUtils.withAlpha
-import com.github.noamm9.utils.MathUtils
 import com.github.noamm9.utils.NumbersUtils.div
 import com.github.noamm9.utils.NumbersUtils.minus
 import com.github.noamm9.utils.NumbersUtils.plus
@@ -35,12 +34,11 @@ object Style {
         ctx.drawString(text, x + xOffset, y, color)
     }
 
-    fun drawSlider(ctx: GuiGraphicsExtractor, x: Float, y: Float, w: Float, progress: Float, hoverAnim: Float, color: Color) {
-        val barColor = MathUtils.lerpColor(color.withAlpha(180), color, hoverAnim)
+    fun drawSlider(ctx: GuiGraphicsExtractor, x: Float, y: Float, w: Float, progress: Float, color: Color) {
         val kSize = 4f
         val h = 2.5f
         ctx.drawRect(x, y, w, h, sliderBackgroundColor)
-        ctx.drawRect(x, y, w * progress, h, barColor)
+        ctx.drawRect(x, y, w * progress, h, color)
         ctx.drawRect(x + (w * progress) - (kSize / 2f), y + (h / 2f) - (kSize / 2f), kSize, kSize)
     }
 

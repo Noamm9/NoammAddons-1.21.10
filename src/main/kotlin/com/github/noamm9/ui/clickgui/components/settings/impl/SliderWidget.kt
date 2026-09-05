@@ -45,7 +45,7 @@ class SliderWidget<T: Number>(config: SliderSetting<T>): Widget<T>(config) {
         val textColor = if (isTyping) Style.accentColor else Color(180, 180, 180)
         ctx.drawString(valStr, x + width - valStr.width() - 8f, y + 2f, textColor)
 
-        Style.drawSlider(ctx, x + 8f, y + 14f, width - 16f, sliderAnim.value, hoverAnim.value, Style.accentColor)
+        Style.drawSlider(ctx, x + 8f, y + 14f, width - 16f, sliderAnim.value, Style.accentColor)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {

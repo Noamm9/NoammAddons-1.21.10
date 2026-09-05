@@ -9,6 +9,7 @@ import com.github.noamm9.init.types.ICustomMenu
 import com.github.noamm9.ui.utils.Resolution
 import com.github.noamm9.utils.*
 import com.github.noamm9.utils.ChatUtils.unformattedText
+import com.github.noamm9.utils.ColorUtils.lerp
 import com.github.noamm9.utils.ColorUtils.withAlpha
 import com.github.noamm9.utils.dungeons.DungeonListener
 import com.github.noamm9.utils.dungeons.DungeonListener.dungeonTeammatesNoSelf
@@ -67,7 +68,7 @@ object LeapMenu: Feature("Custom Leap Menu and leap message"), ICustomMenu {
 
     private fun leapBoxColor(player: DungeonPlayer, isHovered: Boolean) = when {
         showLastDoorOpener.value && DungeonListener.lastDoorOpenner == player -> if (isHovered) doorOpenerBgHover else doorOpenerBg
-        tintDeadPlayers.value && player.isDead -> MathUtils.lerpColor(boxBg, Color.RED, 0.2f).let { if (isHovered) it.brighter() else it }
+        tintDeadPlayers.value && player.isDead -> boxBg.lerp(Color.RED, 0.2f).let { if (isHovered) it.brighter() else it }
         else -> if (isHovered) boxBgHover else boxBg
     }
 

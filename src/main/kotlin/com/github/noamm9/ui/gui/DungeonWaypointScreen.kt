@@ -5,8 +5,8 @@ import com.github.noamm9.ui.clickgui.components.settings.Style
 import com.github.noamm9.ui.utils.Animation
 import com.github.noamm9.ui.utils.Resolution
 import com.github.noamm9.utils.ChatUtils
+import com.github.noamm9.utils.ColorUtils.lerp
 import com.github.noamm9.utils.ColorUtils.withAlpha
-import com.github.noamm9.utils.MathUtils
 import com.github.noamm9.utils.render.Render2D.drawBorder
 import com.github.noamm9.utils.render.Render2D.drawCenteredString
 import com.github.noamm9.utils.render.Render2D.drawRect
@@ -124,7 +124,7 @@ class DungeonWaypointScreen(
         val switchX = x + TOGGLE_WIDTH - 34
         val switchY = y + (TOGGLE_HEIGHT - 14) / 2
         val anim = toggle.switchAnim.value
-        graphics.drawRect(switchX, switchY, 34f, 14f, MathUtils.lerpColor(Color(45, 45, 45, 200), Style.accentColor.withAlpha(200), anim))
+        graphics.drawRect(switchX, switchY, 34f, 14f, Style.accentColor.lerp(Color(45, 45, 45, 200), anim).withAlpha(200))
         graphics.drawRect(switchX + 2 + anim * 20, switchY + 2, 10f, 10f, Color.WHITE)
     }
 

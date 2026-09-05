@@ -6,11 +6,7 @@ import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
-import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.Vec3
-import java.awt.Color
+import net.minecraft.world.phys.*
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -73,12 +69,6 @@ object MathUtils {
     fun lerp(prev: Number, newPos: Number, partialTicks: Number): Double {
         return prev.toDouble() + (newPos.toDouble() - prev.toDouble()) * partialTicks.toDouble()
     }
-
-    fun lerpColor(color1: Color, color2: Color, value: Number) = Color(
-        lerp(color1.red, color2.red, value).toInt(),
-        lerp(color1.green, color2.green, value).toInt(),
-        lerp(color1.blue, color2.blue, value).toInt()
-    )
 
     fun interpolateYaw(startYaw: Float, targetYaw: Float, progress: Float): Float {
         var delta = (targetYaw - startYaw) % 360
