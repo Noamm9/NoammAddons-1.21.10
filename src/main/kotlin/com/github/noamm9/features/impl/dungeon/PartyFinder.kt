@@ -32,10 +32,13 @@ object PartyFinder: Feature(), ICommandProvider {
     private val showLevelReq by ToggleSetting("Show Level Req", true).withDescription("Shows the red level requirement number.").section("Menu")
     private val showMissingOverlay by ToggleSetting("Show Missing Classes", true).withDescription("Shows missing classes on the head.")
 
-    private val showTooltipStats by ToggleSetting("Show Stats", true).withDescription("Shows player stats (Cata/Secrets/PB) in tooltip.").section("Tooltip")
-    private val showSecrets by ToggleSetting("Show Secrets", true).withDescription("Shows Total Secrets and Average.").showIf { showTooltipStats.value }
-    private val showPB by ToggleSetting("Show PB", true).withDescription("Shows Personal Best for the current floor.").showIf { showTooltipStats.value }
-    private val showMissingTooltip by ToggleSetting("Show Missing List", true).withDescription("Shows the list of missing classes at the bottom of the tooltip.")
+    private val showMissingTooltip by ToggleSetting("Show Missing List", true).withDescription("Shows the list of missing classes at the bottom of the tooltip.").section("Tooltip")
+    private val showTooltipStats by MultiCheckboxSetting("Show Player Stats", mutableMapOf(
+        "Catacombs Level" to false,
+        "Total Secrets & Avg" to false,
+        "Magical Power" to false,
+        "PB Time" to false
+    )).withDescription("Shows player stats (Cata/Secrets/PB) in tooltip.")
 
     private val autoKick by ToggleSetting("Auto Kick", false).withDescription("Automatically kick players that don't meet requirements.").section("Auto Kick")
     private val autoKickFloor by DropdownSetting("Floor", 6, listOf("F1", "F2", "F3", "F4", "F5", "F6", "F7")).showIf { autoKick.value }
@@ -134,7 +137,7 @@ object PartyFinder: Feature(), ICommandProvider {
                     val level = cLvl.toInt()
                     val color = getColor(level)
 
-                    val stats = if (showTooltipStats.value) getLoreStats(playerName, floor, type) else ""
+                    val stats = if (showTooltipStats.value.values.any { it }) getLoreStats(playerName, floor, type) else ""
 
                     event.lore[index] = Component.literal(" §b$playerName: §e$className $color$level $stats".addColor())
                     remainingClasses.remove(className)
@@ -200,7 +203,10 @@ object PartyFinder: Feature(), ICommandProvider {
     private suspend fun printPlayerStats(name: String) {
         val cleanName = name.removeFormatting()
 
-        val data = ProfileUtils.getProfile(cleanName).getOrNull() ?: return
+        val data = ProfileUtils.getProfile(cleanName).onFailure {
+            ChatUtils.modMessage("&cFailed to get stats for $name. ${it.message}")
+            it.printStackTrace()
+        }.getOrNull() ?: return
         val dungeons = data.dungeons
 
         val catacombs = dungeons.catacombs
@@ -289,6 +295,8 @@ object PartyFinder: Feature(), ICommandProvider {
     }
 
     private suspend fun autoKickPlayer(name: String) {
+        if (name.equalsOneOf("Noamm", mc.user.name)) return
+
         if (name in kickedPlayers) {
             ChatUtils.modMessage("&9AutoKick &f> &cAuto-kicking &e$name &c(previously kicked)")
             ThreadUtils.scheduledTask(6) { ChatUtils.sendCommand("party kick $name") }
@@ -296,7 +304,6 @@ object PartyFinder: Feature(), ICommandProvider {
         }
 
         val reasons = mutableListOf<String>().apply {
-            if (name.equalsOneOf("Noamm", mc.user.name)) return@apply
             val profile = ProfileUtils.getProfile(name).getOrNull() ?: return@apply
 
             val dungeons = profile.dungeons
@@ -316,9 +323,8 @@ object PartyFinder: Feature(), ICommandProvider {
             }
 
             if (minimumMagicalPower.value > 0 && profile.talismanBagData.isNotBlank()) {
-                val magicalPower = profile.magicalPower
-                if (magicalPower < minimumMagicalPower.value) {
-                    add("MP($magicalPower/${minimumMagicalPower.value})")
+                if (profile.magicalPower < minimumMagicalPower.value) {
+                    add("MP(${profile.magicalPower}/${minimumMagicalPower.value})")
                 }
             }
         }.ifEmpty { return }
@@ -346,16 +352,13 @@ object PartyFinder: Feature(), ICommandProvider {
             cached?.isSuccess == true -> {
                 val data = cached.getOrThrow()
                 return buildString {
-                    append("§b(§6${data.cataLevel}§b)§r")
-
-                    if (showSecrets.value) {
-                        append(" §8[§a${data.dungeons.secrets}§8/§b${data.secretAverage.toFixed(2)}§8]§r")
-                    }
-
-                    if (showPB.value) {
+                    if (showTooltipStats["Catacombs Level"]) append("§b(§6${data.cataLevel}§b)§r ")
+                    if (showTooltipStats["Total Secrets & Avg"]) append("§8[§a${data.dungeons.secrets}§8/§b${data.secretAverage.toFixed(2)}§8]§r ")
+                    if (showTooltipStats["Magical Power"]) append("§8[§d${data.magicalPower}§8]§r ")
+                    if (showTooltipStats["PB Time"]) {
                         val pbObj = if (type == 'F') data.dungeons.catacombs else data.dungeons.masterCatacombs
                         val pb = pbObj.fastestTimeSPlus["$floor"]?.let(::formatTime) ?: "N/A"
-                        append(" §8[§9$pb§8]§r")
+                        append("§8[§9$pb§8]§r ")
                     }
                 }
             }
@@ -365,7 +368,10 @@ object PartyFinder: Feature(), ICommandProvider {
                     pendingFetches.add(key)
                     scope.launch {
                         fetchSemaphore.withPermit {
-                            ProfileUtils.getProfile(key)
+                            ProfileUtils.getProfile(key).onFailure {
+                                ChatUtils.chat(it.message)
+                                it.printStackTrace()
+                            }
                             pendingFetches.remove(key)
                         }
                     }

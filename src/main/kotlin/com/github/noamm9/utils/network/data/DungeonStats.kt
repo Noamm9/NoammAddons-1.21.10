@@ -12,7 +12,7 @@ data class DungeonStats(
     @SerialName("consumed_rift_prism") val consumedRiftPrism: Boolean,
     @SerialName("blood_mobs_killed") val bloodMobsKilled: Int,
     val dungeons: DungeonData,
-    @SerialName("active_pet") val activePet: PetSummary?,
+    @SerialName("active_pet") val activePet: PetSummary? = null,
     val pets: List<PetSummary>,
     @SerialName("armor_data") val armorData: String,
     @SerialName("talisman_bag_data") val talismanBagData: String

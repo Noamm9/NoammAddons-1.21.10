@@ -4,9 +4,7 @@ package com.github.noamm9.features.impl.misc
 
 import com.github.noamm9.config.types.MultiCheckboxSetting
 import com.github.noamm9.config.types.SliderSetting
-import com.github.noamm9.event.impl.MainThreadPacketReceivedEvent
-import com.github.noamm9.event.impl.PacketEvent
-import com.github.noamm9.event.impl.WorldChangeEvent
+import com.github.noamm9.event.impl.*
 import com.github.noamm9.features.Feature
 import com.github.noamm9.mixin.ILocalPlayer
 import com.github.noamm9.utils.*
@@ -16,9 +14,7 @@ import com.github.noamm9.utils.PlayerUtils.serverPitch
 import com.github.noamm9.utils.PlayerUtils.serverYaw
 import com.github.noamm9.utils.Utils.send
 import com.github.noamm9.utils.dungeons.map.utils.ScanUtils
-import com.github.noamm9.utils.items.EtherwarpHelper
-import com.github.noamm9.utils.items.InstantTransmissionHelper
-import com.github.noamm9.utils.items.TeleportUtils
+import com.github.noamm9.utils.items.*
 import com.github.noamm9.utils.location.LocationUtils
 import com.github.noamm9.utils.location.WorldType
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation
@@ -143,9 +139,9 @@ object NoRotate: Feature("Prevents the server from snapping back your head when 
     private fun getInfo(stack: ItemStack?): TeleportUtils.Info? {
         val info = TeleportUtils.getInfo(stack) ?: return null
         return when (info.type) {
-            TeleportUtils.Etherwarp -> if (tpItems.value["Etherwarp"] !!) info else null
-            TeleportUtils.InstantTransmission -> if (tpItems.value["Instant Transmission"] !!) info else null
-            TeleportUtils.WitherImpact -> if (tpItems.value["Wither Impact"] !!) info else null
+            TeleportUtils.Etherwarp -> if (tpItems["Etherwarp"]) info else null
+            TeleportUtils.InstantTransmission -> if (tpItems["Instant Transmission"]) info else null
+            TeleportUtils.WitherImpact -> if (tpItems["Wither Impact"]) info else null
             else -> null
         }
     }
