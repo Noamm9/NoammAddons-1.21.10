@@ -1,11 +1,5 @@
 package com.github.noamm9.features.impl.general.teleport
 
-//#if CHEAT
-//#endif
-//#if CHEAT
-//#endif
-//#if CHEAT
-//#endif
 import com.github.noamm9.config.types.*
 import com.github.noamm9.event.impl.*
 import com.github.noamm9.features.Feature
