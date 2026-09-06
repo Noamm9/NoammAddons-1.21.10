@@ -43,6 +43,7 @@ object PartyFinder: Feature(), ICommandProvider {
     private val informKicked by ToggleSetting("Inform Kicked", false).withDescription("Send a party chat message before kicking.").showIf { autoKick.value }
     private val maximumSeconds by SliderSetting("Maximum Seconds", 400, 60, 480, 10, suffix = "s").withDescription("Maximum S+ PB time in seconds.").showIf { autoKick.value }
     private val minimumSecrets by SliderSetting("Minimum Secrets", 0, 0, 200, 1, suffix = "k").withDescription("Minimum secrets in thousands.").showIf { autoKick.value }
+    private val minimumMagicalPower by SliderSetting("Minimum MP", 0, 0, 3000, 10).withDescription("Minimum MP Set to 0 to disable. Skipped when Inventory API is off.").showIf { autoKick.value }
 
     private val dungeonGroupJoinRegex = Regex("^Party Finder > (\\w{1,16}) joined the dungeon group! \\((\\w+) Level (\\d+)\\)$")
     private val kickedPlayers = mutableSetOf<String>()
@@ -312,6 +313,13 @@ object PartyFinder: Feature(), ICommandProvider {
 
             if (minimumSecrets.value > 0 && dungeons.secrets < minimumSecrets.value * 1000) {
                 add("Secrets(${dungeons.secrets / 1000}k/${minimumSecrets.value}k)")
+            }
+
+            if (minimumMagicalPower.value > 0 && profile.talismanBagData.isNotBlank()) {
+                val magicalPower = profile.magicalPower
+                if (magicalPower < minimumMagicalPower.value) {
+                    add("MP($magicalPower/${minimumMagicalPower.value})")
+                }
             }
         }.ifEmpty { return }
 
