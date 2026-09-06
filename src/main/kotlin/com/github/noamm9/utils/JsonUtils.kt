@@ -1,20 +1,12 @@
 package com.github.noamm9.utils
 
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
-import com.google.gson.GsonBuilder
 import net.minecraft.core.BlockPos
 import java.awt.Color
-import java.io.File
 
 object JsonUtils {
     val json = Json {
@@ -25,14 +17,6 @@ object JsonUtils {
             contextual(BlockPos::class, BlockPosSerializer)
         }
     }
-
-    val gsonBuilder = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().apply {
-        registerTypeAdapter(BlockPos::class.java, GsonUtils.BlockPosAdapter())
-        registerTypeAdapter(Color::class.java, GsonUtils.ColorAdapter())
-        registerTypeAdapter(Regex::class.java, GsonUtils.RegexAdapter())
-    }
-
-    fun toJson(file: File, obj: Any) = FileHandler(file).write(gsonBuilder.create().toJson(obj))
 
     fun JsonObject.getObj(key: String) = this[key]?.jsonObject
     fun JsonObject.getString(key: String) = this[key]?.jsonPrimitive?.content

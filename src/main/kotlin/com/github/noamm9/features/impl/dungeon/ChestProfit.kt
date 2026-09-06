@@ -1,5 +1,6 @@
 package com.github.noamm9.features.impl.dungeon
 
+import com.github.noamm9.NoammAddons
 import com.github.noamm9.config.types.SliderSetting
 import com.github.noamm9.config.types.ToggleSetting
 import com.github.noamm9.event.impl.*
@@ -21,6 +22,7 @@ import com.github.noamm9.utils.location.WorldType
 import com.github.noamm9.utils.render.Render2D.drawString
 import com.github.noamm9.utils.render.Render2D.highlight
 import com.github.noamm9.utils.render.RenderHelper.width
+import gg.essential.universal.UChat
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -46,6 +48,8 @@ object ChestProfit: Feature("Dungeon Chest Profit Calculator") {
 
     private val feather by lazy { ItemStack(Items.FEATHER) }
     private val npcLoc = vec(- 28, 119, 35)
+
+    private val isDebugEnabled get() = NoammAddons.debugFlags.contains("chest")
 
     override fun init() {
         register<WorldChangeEvent> {
@@ -99,16 +103,38 @@ object ChestProfit: Feature("Dungeon Chest Profit Calculator") {
                     val lore = rewardItem.lore.map { it.removeFormatting() }
                     if ("Cost" !in lore) return@register
 
-                    var profit = - getChestCost(lore)
+                    val chestCost = getChestCost(lore)
+                    var profit = - chestCost
+                    val debugEntry = mutableListOf<Triple<String, String, Long>>()
 
                     event.items.forEach { (_, stack) ->
-                        if (stack.item == Items.GRAY_STAINED_GLASS_PANE) return@forEach
+                        if (stack.item == Items.BLACK_STAINED_GLASS_PANE) return@forEach
                         val value = getItemValue(stack)
                         profit += value
+                        if (isDebugEnabled) {
+                            val name = stack.hoverName.unformattedText
+                            val id = stack.skyblockId.removePrefix("STARRED_")
+                            debugEntry += Triple(name, id, value)
+                        }
                     }
 
                     currentChest.profit = profit
                     currentChest.openedInSequence = true
+
+                    if (isDebugEnabled) {
+                        UChat.chat("")
+                        ChatUtils.debug("chest", "§6§l${currentChest.displayText} §7opened")
+                        ChatUtils.debug("chest", "§7Cost: §c-${NumbersUtils.format(chestCost)}")
+                        ChatUtils.debug("chest", "§7--- Items ---")
+                        debugEntry.forEach { (name, id, price) ->
+                            val priceColor = if (price > 0) "§a" else "§7"
+                            ChatUtils.debug("chest", "§f$name §7→ §e$id §7= $priceColor${NumbersUtils.format(price)}")
+                        }
+                        val profitColor = if (profit < 0) "§4" else "§a"
+                        ChatUtils.debug("chest", "§7--- Total ---")
+                        ChatUtils.debug("chest", "§7Profit: $profitColor${NumbersUtils.format(profit)}")
+                        UChat.chat("")
+                    }
                 }
 
                 croesusChestsProfit.value && chestName.matches(croesusChestRegex) -> {
@@ -122,13 +148,20 @@ object ChestProfit: Feature("Dungeon Chest Profit Calculator") {
                         val contentIndex = lore.indexOfFirst { it.contains("Contents") }.takeUnless { it == - 1 } ?: continue
 
                         chestType.slot = i
-                        var profit = - getChestCost(lore.map { it.removeFormatting() })
+                        val chestCost = getChestCost(lore.map { it.removeFormatting() })
+                        var profit = - chestCost
+                        val debugEntry = mutableListOf<Triple<String, String, Long>>()
 
                         lore.drop(contentIndex + 1).takeWhile { it.isNotBlank() }.forEach { line ->
                             val value = if (line.contains("Essence")) getEssenceValue(line)
                             else getIdFromName(line)?.let { getPrice(it) } ?: 0
 
                             profit += value
+                            if (isDebugEnabled) {
+                                val cleanLine = line.removeFormatting()
+                                val id = getIdFromName(line) ?: "???"
+                                debugEntry += Triple(cleanLine, id, value)
+                            }
                         }
 
                         chestType.profit = profit
@@ -138,6 +171,21 @@ object ChestProfit: Feature("Dungeon Chest Profit Calculator") {
                             chestsToHighlight.add(chestType)
                         }
                         else chestsToHighlight.find { it == chestType }?.profit = profit
+
+                        if (isDebugEnabled) {
+                            UChat.chat("")
+                            ChatUtils.debug("chest", "§6§l${chestType.displayText} §7(Croesus)")
+                            ChatUtils.debug("chest", "§7Cost: §c-${NumbersUtils.format(chestCost)}")
+                            ChatUtils.debug("chest", "§7--- Items ---")
+                            debugEntry.forEach { (name, id, price) ->
+                                val priceColor = if (price > 0) "§a" else "§7"
+                                ChatUtils.debug("chest", "§f$name §7→ §e$id §7= $priceColor${NumbersUtils.format(price)}")
+                            }
+                            val profitColor = if (profit < 0) "§4" else "§a"
+                            ChatUtils.debug("chest", "§7--- Total ---")
+                            ChatUtils.debug("chest", "§7Profit: $profitColor${NumbersUtils.format(profit)}")
+                            UChat.chat("")
+                        }
                     }
 
                     sortedChestsCache = chestsToHighlight.sortedByDescending { it.profit }
@@ -250,20 +298,8 @@ object ChestProfit: Feature("Dungeon Chest Profit Calculator") {
         val itemId = stack.skyblockId.removePrefix("STARRED_")
         var value = 0L
 
-        if (itemId == "ENCHANTED_BOOK") {
-            val lore = stack.lore
-            val bookName = lore[0].takeIf { it != "§8Combinable in Anvil" } ?: lore[2]
-            value += getPrice(enchantNameToID(bookName))
-        }
         value += getEssenceValue(itemName)
         value += getPrice(itemId)
-        if (itemName.contains("Shard")) {
-            val cleanName = itemName.removeFormatting().uppercase().remove(" SHARD").replace(" ", "_").remove("_X1")
-            val shardId = "SHARD_$cleanName"
-            val shardPrice = getPrice(shardId)
-
-            value += shardPrice
-        }
 
         return value
     }
@@ -318,9 +354,9 @@ object ChestProfit: Feature("Dungeon Chest Profit Calculator") {
         var openedInSequence: Boolean = false
 
         fun reset() {
-            slot = 0
-            profit = 0
             openedInSequence = false
+            profit = 0
+            slot = 0
         }
 
         companion object {
@@ -331,7 +367,7 @@ object ChestProfit: Feature("Dungeon Chest Profit Calculator") {
                 }
             }
 
-            internal val example = listOf(
+            val example = listOf(
                 WOOD to "Wood Chest: §a75k",
                 GOLD to "Gold Chest: §4-62k",
                 DIAMOND to "Diamond Chest: §a24k",

@@ -1,8 +1,10 @@
 package com.github.noamm9.utils.items
 
+import com.github.noamm9.utils.*
 import com.github.noamm9.utils.ChatUtils.formattedText
 import com.github.noamm9.utils.ChatUtils.removeFormatting
-import com.github.noamm9.utils.JsonUtils
+import com.github.noamm9.utils.ChatUtils.unformattedText
+import com.github.noamm9.utils.NumbersUtils.romanToDecimal
 import com.github.noamm9.utils.items.ItemRarity.Companion.PET_PATTERN
 import com.github.noamm9.utils.items.ItemRarity.Companion.RARITY_PATTERN
 import com.github.noamm9.utils.items.ItemRarity.Companion.rarityCache
@@ -23,44 +25,56 @@ object ItemUtils {
             if (isEmpty) return ""
             val customData = customData
             var sbItemID: String? = null
+            val name = hoverName.unformattedText
 
             if (customData.contains("id")) sbItemID = customData.getString("id").getOrNull()?.replace(":", "-")
+
             if (sbItemID == "PET") {
                 val petInfoRaw = customData.getString("petInfo").getOrNull()?.takeIf { it.isNotEmpty() } ?: return sbItemID
                 val petInfo = JsonUtils.json.decodeFromString<DungeonStats.PetSummary>(petInfoRaw)
-                sbItemID += "-${petInfo.type}-${petInfo.tier}"
+                return "PET-${petInfo.type}-${petInfo.tier}"
+            }
+
+            if (sbItemID == "ENCHANTED_BOOK") {
+                val lore = lore
+                val bookName = lore[0].takeIf { it != "§8Combinable in Anvil" } ?: lore[2]
+                val enchantName = bookName.substringBeforeLast(" ")
+                val levelStr = bookName.substringAfterLast(" ").removeFormatting()
+
+                val name = enchantName.removeFormatting().uppercase().replace(" ", "_")
+                val level = levelStr.toIntOrNull() ?: levelStr.romanToDecimal()
+                val isUltimate = enchantName.startsWithOneOf("§9§d§l", "§d§l", "§7§l") && ! name.contains("ULTIMATE_")
+
+                return "ENCHANTMENT_${if (isUltimate) "ULTIMATE_" else ""}${name}_$level"
+            }
+
+            if (sbItemID.equalsOneOf("RUNE", "UNIQUE_RUNE")) {
+                val runes = customData.getCompound("runes").getOrNull() ?: return ""
+                val runeId = runes.keySet().singleOrNull() ?: return ""
+                val level = runes.getIntOr(runeId, 0)
+                if (level <= 0) return ""
+                return "RUNE-${runeId.uppercase()}-$level"
+            }
+
+            if (sbItemID == "POTION") {
+                val potion = customData.getString("potion").getOrNull()?.takeIf(String::isNotEmpty) ?: return ""
+                val level = customData.getIntOr("potion_level", 0)
+                if (level <= 0) return ""
+
+                return "POTION-${potion.uppercase()}-$level${if (customData.getBooleanOr("enhanced", false)) "-ENHANCED" else ""}"
+            }
+
+            if (sbItemID == null) {
+                val lore = lore
+
+                if (name.contains(" Shard ") || lore.lastOrNull()?.substringBefore("(")?.endsWith(" SHARD ") == true) {
+                    val cleanName = name.removeFormatting().uppercase().remove(" SHARD").replace(" ", "_").remove("_X1")
+                    return "SHARD_$cleanName"
+                }
+
             }
 
             return sbItemID.orEmpty()
-        }
-
-    val ItemStack.marketId: String
-        get() {
-            val data = customData
-            return when (val id = skyblockId) {
-                "ENCHANTED_BOOK" -> {
-                    val enchantments = data.getCompound("enchantments").getOrNull() ?: return ""
-                    val enchantId = enchantments.keySet().singleOrNull() ?: return ""
-                    val level = enchantments.getIntOr(enchantId, 0)
-                    if (level > 0) "ENCHANTED_BOOK-${enchantId.uppercase()}-$level" else ""
-                }
-
-                "RUNE", "UNIQUE_RUNE" -> {
-                    val runes = data.getCompound("runes").getOrNull() ?: return ""
-                    val runeId = runes.keySet().singleOrNull() ?: return ""
-                    val level = runes.getIntOr(runeId, 0)
-                    if (level > 0) "RUNE-${runeId.uppercase()}-$level" else ""
-                }
-
-                "POTION" -> {
-                    val potion = data.getString("potion").getOrNull()?.takeIf(String::isNotEmpty) ?: return ""
-                    val level = data.getIntOr("potion_level", 0)
-                    if (level <= 0) return ""
-                    "POTION-${potion.uppercase()}-$level${if (data.getBooleanOr("enhanced", false)) "-ENHANCED" else ""}"
-                }
-
-                else -> id
-            }
         }
 
     fun getSkullTexture(stack: ItemStack): String? {

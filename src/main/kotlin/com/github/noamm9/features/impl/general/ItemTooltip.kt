@@ -9,7 +9,6 @@ import com.github.noamm9.init.NetworkLoop
 import com.github.noamm9.mixin.IAbstractContainerScreen
 import com.github.noamm9.utils.NumbersUtils.formatComma
 import com.github.noamm9.utils.items.ItemUtils.customData
-import com.github.noamm9.utils.items.ItemUtils.marketId
 import com.github.noamm9.utils.items.ItemUtils.skyblockId
 import com.github.noamm9.utils.location.LocationUtils.inSkyblock
 import gg.essential.universal.UKeyboard
@@ -65,7 +64,7 @@ object ItemTooltip: Feature("Adds item information and controls to item tooltips
             if (! showPrices.value) return@register
 
             val quantity = event.stack.count
-            val itemId = event.stack.marketId
+            val itemId = event.stack.skyblockId
 
             NetworkLoop.getBazaarPrice(itemId)?.let { price ->
                 addPriceLine(event.lore, "Bazaar Buy", price.buy, quantity)
