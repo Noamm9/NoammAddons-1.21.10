@@ -1,5 +1,11 @@
 package com.github.noamm9.features.impl.general.teleport
 
+//#if CHEAT
+//#endif
+//#if CHEAT
+//#endif
+//#if CHEAT
+//#endif
 import com.github.noamm9.config.types.*
 import com.github.noamm9.event.impl.*
 import com.github.noamm9.features.Feature
@@ -38,10 +44,9 @@ object Etherwarp: Feature("Etherwarp overlay and sound.") {
     private val zeroPingSound by ToggleSetting("Zero-Ping Sound").withDescription("Plays the Etherwarp sound client-side instead of waiting for the server to send the sound packet").showIf { etherwarpSound.value }
     private val playSound = createSoundSettings("Sound", SoundEvents.EXPERIENCE_ORB_PICKUP) { etherwarpSound.value }
 
+    //#if CHEAT
     private val leftClick by ToggleSetting("Left-Click Etherwarp").section("Left Click")
     private val swingHandToggle by ToggleSetting("Swing Hand", true).showIf { leftClick.value }
-
-    //#if CHEAT
     private val autoSneak by ToggleSetting("Auto Sneak", false).showIf { leftClick.value }
     private val autoSneakDelay by SliderSetting("Auto Sneak Delay", 50, 50, 150, 1).showIf { leftClick.value && autoSneak.value }
     //#endif
@@ -103,22 +108,18 @@ object Etherwarp: Feature("Etherwarp overlay and sound.") {
             if (! succeeded || pos == null) return@register
             if (TeleportUtils.canTeleport(packet.yRot, packet.xRot)) playSound.action.invoke()
         }
-        
+
+        //#if CHEAT
         register<MouseClickEvent> {
             if (! leftClick.value) return@register
             if (event.button != 0) return@register
             if (event.action != GLFW.GLFW_PRESS) return@register
             if (UMinecraft.currentScreenObj != null) return@register
-            //#if CHEAT
             if (! mc.options.keyShift.isDown && ! autoSneak.value) return@register
-            //#else
-            //$if (! mc.options.keyShift.isDown) return@register
-            //#endif
             if (EtherwarpHelper.getEtherwarpDistance(player.mainHandItem) == null) return@register
 
             event.isCanceled = true
 
-            //#if CHEAT
             if (! player.isCrouching && autoSneak.value) scope.launch {
                 val wait = autoSneakDelay.value.toLong() / 2
                 PlayerUtils.toggleSneak(true)
@@ -134,10 +135,7 @@ object Etherwarp: Feature("Etherwarp overlay and sound.") {
                 PlayerUtils.rightClick()
                 if (swingHandToggle.value) PlayerUtils.swingArm()
             }
-            //#else
-            //$PlayerUtils.rightClick()
-            //$if (swingHandToggle.value) PlayerUtils.swingArm()
-            //#endif
         }
+        //#endif
     }
 }
