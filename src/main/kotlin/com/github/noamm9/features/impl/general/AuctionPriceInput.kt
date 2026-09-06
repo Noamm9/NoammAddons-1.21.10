@@ -8,13 +8,11 @@ import com.github.noamm9.init.NetworkLoop
 import com.github.noamm9.mixin.IAbstractSignEditScreen
 import com.github.noamm9.ui.utils.componnents.UIButton
 import com.github.noamm9.ui.utils.componnents.UISearchBox
+import com.github.noamm9.utils.*
 import com.github.noamm9.utils.ChatUtils.unformattedText
-import com.github.noamm9.utils.GuiUtils
-import com.github.noamm9.utils.NumbersUtils
 import com.github.noamm9.utils.Utils.send
 import com.github.noamm9.utils.items.ItemUtils.skyblockId
 import com.github.noamm9.utils.render.Render2D.drawCenteredString
-import com.github.noamm9.utils.uppercaseFirst
 import gg.essential.universal.UKeyboard
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -95,8 +93,8 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
         override fun init() {
             super.init()
 
-            if (rememberInput.value["Text"] != true) input = ""
-            mode = if (rememberInput.value["Mode"] == true && mode != null) mode else InputMode.entries[defaultMode.value]
+            if (! rememberInput["Text"]) input = ""
+            mode = if (rememberInput["Mode"] && mode != null) mode else InputMode.entries[defaultMode.value]
 
             lowestBin = NetworkLoop.getLowestBin(stack.skyblockId) ?: 0L
 

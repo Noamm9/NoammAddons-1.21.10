@@ -40,7 +40,7 @@ object PlayerHud: Feature(name = "Player HUD", description = "Displays your stat
     override fun init() {
         hudElement(
             this.name + " Health",
-            { elements.value["Health"] == true },
+            { elements["Health"] },
             { LocationUtils.inSkyblock }
         ) { context, example ->
             val text = if (example) "§e3452§f/§c2452" else getHpFormatted()
@@ -50,7 +50,7 @@ object PlayerHud: Feature(name = "Player HUD", description = "Displays your stat
 
         hudElement(
             this.name + " Defense",
-            { elements.value["Defense"] == true },
+            { elements["Defense"] },
             { LocationUtils.inSkyblock }
         ) { context, example ->
             val text = if (example) "§a5001" else "§a${ActionBarParser.currentDefense}"
@@ -60,7 +60,7 @@ object PlayerHud: Feature(name = "Player HUD", description = "Displays your stat
 
         hudElement(
             this.name + " Mana",
-            { elements.value["Mana"] == true },
+            { elements["Mana"] },
             { LocationUtils.inSkyblock }
         ) { context, example ->
             val text = if (example) "§b2452/2452" else "§b${ActionBarParser.currentMana}/${ActionBarParser.maxMana}"
@@ -70,7 +70,7 @@ object PlayerHud: Feature(name = "Player HUD", description = "Displays your stat
 
         hudElement(
             this.name + " Overflow Mana",
-            { elements.value["Overflow Mana"] == true },
+            { elements["Overflow Mana"] },
             { LocationUtils.inSkyblock && ActionBarParser.overflowMana > 0 }
         ) { context, example ->
             val text = if (example) "§3600ʬ" else "§3${ActionBarParser.overflowMana}ʬ"
@@ -80,7 +80,7 @@ object PlayerHud: Feature(name = "Player HUD", description = "Displays your stat
 
         hudElement(
             this.name + " Vitality",
-            { elements.value["Vitality"] == true },
+            { elements["Vitality"] },
             { LocationUtils.inSkyblock && ActionBarParser.isVitalityShown }
         ) { context, example ->
             val text = if (example) "§482/122" else "§4${ActionBarParser.currentVitality}/${ActionBarParser.maxVitality}"
@@ -90,7 +90,7 @@ object PlayerHud: Feature(name = "Player HUD", description = "Displays your stat
 
         hudElement(
             this.name + " Effective HP",
-            { elements.value["Effective HP"] == true },
+            { elements["Effective HP"] },
             { LocationUtils.inSkyblock }
         ) { context, example ->
             val text = if (example) "§27.3m" else "§2${NumbersUtils.format(ActionBarParser.effectiveHP)}"
@@ -100,7 +100,7 @@ object PlayerHud: Feature(name = "Player HUD", description = "Displays your stat
 
         hudElement(
             this.name + " Speed",
-            { elements.value["Speed"] == true },
+            { elements["Speed"] },
             { LocationUtils.inSkyblock }
         ) { context, example ->
             val text = if (example) "§f400✦" else "§f${ActionBarParser.currentSpeed}✦"
@@ -112,14 +112,14 @@ object PlayerHud: Feature(name = "Player HUD", description = "Displays your stat
             if (! LocationUtils.inSkyblock) return@register
             var result = event.formattedText
 
-            if (hideFromActionbar.value["Health"] == true) result = result.replace(ActionBarParser.HP_REGEX, "")
-            if (hideFromActionbar.value["Defense"] == true) result = result.replace(ActionBarParser.DEF_REGEX, "")
-            if (hideFromActionbar.value["Mana"] == true) result = result.replace(ActionBarParser.MANA_REGEX, "")
-            if (hideFromActionbar.value["Overflow Mana"] == true) result = result.replace(ActionBarParser.OVERFLOW_REGEX, "")
-            if (hideFromActionbar.value["Vitality"] == true) result = result.replace(ActionBarParser.VITALITY_REGEX, "")
-            if (hideFromActionbar.value["Dungeon Room Secrets"] == true) result = result.replace(ActionBarParser.SECRETS_REGEX, "")
-            if (hideFromActionbar.value["Armor Stacks"] == true) result = result.replace(ActionBarParser.STACKS_REGEX, "")
-            if (hideFromActionbar.value["Terminator Stacks"] == true) result = result.replace(ActionBarParser.SALVATION_REGEX, "")
+            if (hideFromActionbar["Health"]) result = result.replace(ActionBarParser.HP_REGEX, "")
+            if (hideFromActionbar["Defense"]) result = result.replace(ActionBarParser.DEF_REGEX, "")
+            if (hideFromActionbar["Mana"]) result = result.replace(ActionBarParser.MANA_REGEX, "")
+            if (hideFromActionbar["Overflow Mana"]) result = result.replace(ActionBarParser.OVERFLOW_REGEX, "")
+            if (hideFromActionbar["Vitality"]) result = result.replace(ActionBarParser.VITALITY_REGEX, "")
+            if (hideFromActionbar["Dungeon Room Secrets"]) result = result.replace(ActionBarParser.SECRETS_REGEX, "")
+            if (hideFromActionbar["Armor Stacks"]) result = result.replace(ActionBarParser.STACKS_REGEX, "")
+            if (hideFromActionbar["Terminator Stacks"]) result = result.replace(ActionBarParser.SALVATION_REGEX, "")
 
             event.message = result
         }

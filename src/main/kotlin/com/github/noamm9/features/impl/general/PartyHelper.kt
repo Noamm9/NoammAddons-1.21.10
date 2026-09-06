@@ -4,9 +4,7 @@ import com.github.noamm9.commands.CommandBuilder
 import com.github.noamm9.config.PogObject
 import com.github.noamm9.config.types.MultiCheckboxSetting
 import com.github.noamm9.config.types.ToggleSetting
-import com.github.noamm9.event.impl.ChatMessageEvent
-import com.github.noamm9.event.impl.DungeonEvent
-import com.github.noamm9.event.impl.PacketEvent
+import com.github.noamm9.event.impl.*
 import com.github.noamm9.features.Feature
 import com.github.noamm9.init.types.ICommandProvider
 import com.github.noamm9.utils.*
@@ -17,10 +15,7 @@ import com.github.noamm9.utils.dungeons.DungeonUtils
 import com.github.noamm9.utils.location.LocationUtils
 import com.mojang.brigadier.arguments.StringArgumentType
 import gg.essential.universal.USound
-import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.*
 import net.minecraft.network.protocol.game.ServerboundChatCommandPacket
 import net.minecraft.sounds.SoundEvents
 import kotlin.math.roundToInt
@@ -125,53 +120,51 @@ object PartyHelper: Feature("Party commands and reformatting."), ICommandProvide
     private fun handlePartyCommand(sender: String, cmd: String, args: List<String>) {
         if (isBlacklisted(sender)) return
 
-        fun canRun(key: String) = commands.value[key] == true
-
         when {
-            canRun("!fps") && cmd == "fps" -> ChatUtils.sendPartyMessage("FPS: ${mc.fps}")
+            commands["!fps"] && cmd == "fps" -> ChatUtils.sendPartyMessage("FPS: ${mc.fps}")
 
-            canRun("!f") && cmd.startsWith("f") -> {
+            commands["!f"] && cmd.startsWith("f") -> {
                 val floor = cmd.removePrefix("f").toIntOrNull() ?: args.getOrNull(0)?.toIntOrNull() ?: return
                 if (floor in 0 .. 7) runCommand("joininstance CATACOMBS_FLOOR_${DungeonUtils.FLOOR_NAMES[floor]}", true)
             }
 
-            canRun("!m") && cmd.startsWith("m") -> {
+            commands["!m"] && cmd.startsWith("m") -> {
                 val floor = cmd.removePrefix("m").toIntOrNull() ?: args.getOrNull(0)?.toIntOrNull() ?: return
                 if (floor in 1 .. 7) runCommand("joininstance MASTER_CATACOMBS_FLOOR_${DungeonUtils.FLOOR_NAMES[floor]}", true)
             }
 
-            canRun("!pt") && cmd.equalsOneOf("pt", "ptme") -> {
+            commands["!pt"] && cmd.equalsOneOf("pt", "ptme") -> {
                 if (sender != mc.user.name) runCommand("p transfer $sender", true)
             }
 
-            canRun("!coords") && cmd.equalsOneOf("coords", "cords") -> {
+            commands["!coords"] && cmd.equalsOneOf("coords", "cords") -> {
                 runCommand("pc x: ${player.blockX}, y: ${player.blockY}, z: ${player.blockZ}")
             }
 
-            canRun("!dt") && cmd.equalsOneOf("dt", "downtime") -> {
+            commands["!dt"] && cmd.equalsOneOf("dt", "downtime") -> {
                 downtimeList[sender] = args.joinToString(" ").ifBlank { "No reason" }
             }
 
-            canRun("!w") && cmd.equalsOneOf("warp", "w") -> runCommand("p warp", true)
+            commands["!w"] && cmd.equalsOneOf("warp", "w") -> runCommand("p warp", true)
 
-            canRun("!ai") && cmd.equalsOneOf("ai", "allinvite") -> runCommand("p settings allinvite", true)
+            commands["!ai"] && cmd.equalsOneOf("ai", "allinvite") -> runCommand("p settings allinvite", true)
 
-            canRun("!ping") && cmd == "ping" -> ChatUtils.sendPartyMessage("Ping: ${ServerUtils.currentPing}ms")
+            commands["!ping"] && cmd == "ping" -> ChatUtils.sendPartyMessage("Ping: ${ServerUtils.currentPing}ms")
 
-            canRun("!tps") && cmd == "tps" -> ChatUtils.sendPartyMessage("TPS: ${ServerUtils.tps.toFixed(1)}")
+            commands["!tps"] && cmd == "tps" -> ChatUtils.sendPartyMessage("TPS: ${ServerUtils.tps.toFixed(1)}")
 
-            canRun("!kick") && cmd.equalsOneOf("kick", "k") -> {
+            commands["!kick"] && cmd.equalsOneOf("kick", "k") -> {
                 if (args.isEmpty()) return
                 PartyUtils.members.find { it.contains(args[0], true) }?.let {
                     runCommand("p kick $it", true)
                 }
             }
 
-            canRun("!inv") && cmd.equalsOneOf("inv", "kidnap", "invite") -> {
+            commands["!inv"] && cmd.equalsOneOf("inv", "kidnap", "invite") -> {
                 args.firstOrNull()?.let { runCommand("p invite $it", true) }
             }
 
-            canRun("!gay") && cmd == "gay" -> {
+            commands["!gay"] && cmd == "gay" -> {
                 val target = args.firstOrNull() ?: sender
                 val gayPercentage = (Math.random() * 100).roundToInt().coerceIn(0, 100)
                 runCommand("pc $target is $gayPercentage% gay.")

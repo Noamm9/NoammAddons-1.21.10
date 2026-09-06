@@ -4,12 +4,13 @@ import com.github.noamm9.NoammAddons.MOD_ID
 import com.github.noamm9.NoammAddons.MOD_VERSION
 import com.github.noamm9.NoammAddons.logger
 import com.github.noamm9.NoammAddons.mc
-import com.github.noamm9.NoammAddons.scope
 import com.github.noamm9.event.EventBus.register
 import com.github.noamm9.event.impl.GameStartEvent
+import com.github.noamm9.init.types.ISelfInit
 import com.github.noamm9.mixin.IMinecraft
 import com.github.noamm9.utils.GsonUtils.decode
 import com.github.noamm9.utils.GsonUtils.encode
+import com.github.noamm9.utils.ThreadUtils.async
 import com.github.noamm9.utils.ThreadUtils.setTimeout
 import com.github.noamm9.utils.network.NoammAPI.BASE_URL
 import com.github.noamm9.utils.network.WebUtils.client
@@ -18,21 +19,20 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.security.PrivateKey
 import java.security.Signature
 import java.util.*
 import kotlin.io.encoding.Base64
 
-object ApiAuth {
+object ApiAuth: ISelfInit {
     private const val AUTH_URL = "$BASE_URL/hypixel/auth"
     @Volatile private var tokenInfo: TokenResponse? = null
     val token get() = tokenInfo?.token
 
-    fun init() {
+    override fun init() {
         register<GameStartEvent> {
-            scope.launch { updateToken() }
+            async(::updateToken)
         }
     }
 
@@ -66,16 +66,8 @@ object ApiAuth {
             }
 
             val request = TokenRequest(
-                keyPair = KeyPairInfo(
-                    uuid = uuid.toString(),
-                    publicKey = publicKey,
-                    publicKeySignature = Base64.encode(publicKeySignature),
-                    expiresAt = expiresAt
-                ),
-                signedData = signedData,
-                mod = MOD_ID,
-                minecraftVersion = "26.1.2",
-                modVersion = MOD_VERSION
+                KeyPairInfo(uuid.toString(), publicKey, Base64.encode(publicKeySignature), expiresAt),
+                signedData, MOD_ID, "@MINECRAFT_VERSION@", MOD_VERSION
             )
 
             val response = client.post(AUTH_URL) {
@@ -115,10 +107,7 @@ object ApiAuth {
             sig.update(buf.array())
             val signed = sig.sign()
 
-            SignedData(
-                original = Base64.encode(buf.array()),
-                signed = Base64.encode(signed)
-            )
+            SignedData(Base64.encode(buf.array()), Base64.encode(signed))
         }
         catch (e: Exception) {
             logger.error("[ApiAuth] Failed to sign random data", e)
